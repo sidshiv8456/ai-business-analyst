@@ -3,7 +3,7 @@ import pandas as pd
 import plotly.express as px
 
 # --------------------------------------------------
-# Page Configuration
+# PAGE CONFIG
 # --------------------------------------------------
 
 st.set_page_config(
@@ -15,7 +15,7 @@ st.set_page_config(
 st.title("📊 AI Business Analyst")
 
 # --------------------------------------------------
-# File Upload
+# FILE UPLOAD
 # --------------------------------------------------
 
 uploaded_file = st.file_uploader(
@@ -24,22 +24,21 @@ uploaded_file = st.file_uploader(
 )
 
 # --------------------------------------------------
-# Main App
+# MAIN APP
 # --------------------------------------------------
 
 if uploaded_file:
 
-    # Read Excel File
+    # Load Data
     df = pd.read_excel(
         uploaded_file,
         sheet_name="Sales_Data"
     )
 
-    # Convert Date Column
     df["Date"] = pd.to_datetime(df["Date"])
 
     # --------------------------------------------------
-    # KPI Calculations
+    # KPI CALCULATIONS
     # --------------------------------------------------
 
     total_revenue = df["Revenue"].sum()
@@ -54,10 +53,12 @@ if uploaded_file:
 
     average_profit_per_order = total_profit / total_orders
 
-    profit_margin = (total_profit / total_revenue) * 100
+    profit_margin = (
+        total_profit / total_revenue
+    ) * 100
 
     # --------------------------------------------------
-    # KPI Dashboard
+    # KPI DASHBOARD
     # --------------------------------------------------
 
     st.subheader("📌 Business KPIs")
@@ -105,7 +106,7 @@ if uploaded_file:
     st.divider()
 
     # --------------------------------------------------
-    # Revenue Trend
+    # REVENUE TREND
     # --------------------------------------------------
 
     st.subheader("📈 Monthly Revenue Trend")
@@ -118,7 +119,10 @@ if uploaded_file:
         .reset_index()
     )
 
-    monthly_revenue["Date"] = monthly_revenue["Date"].astype(str)
+    monthly_revenue["Date"] = (
+        monthly_revenue["Date"]
+        .astype(str)
+    )
 
     fig = px.line(
         monthly_revenue,
@@ -136,7 +140,7 @@ if uploaded_file:
     st.divider()
 
     # --------------------------------------------------
-    # Region Performance
+    # REGION PERFORMANCE
     # --------------------------------------------------
 
     st.subheader("🌍 Region Performance")
@@ -155,8 +159,8 @@ if uploaded_file:
         region_sales,
         x="Region",
         y="Revenue",
-        title="Revenue by Region",
-        text_auto=True
+        text_auto=True,
+        title="Revenue by Region"
     )
 
     st.plotly_chart(
@@ -167,7 +171,7 @@ if uploaded_file:
     st.divider()
 
     # --------------------------------------------------
-    # Top Customers
+    # TOP CUSTOMERS
     # --------------------------------------------------
 
     st.subheader("🏆 Top 10 Customers")
@@ -187,8 +191,8 @@ if uploaded_file:
         top_customers,
         x="Customer_Name",
         y="Revenue",
-        title="Top 10 Customers by Revenue",
-        text_auto=True
+        text_auto=True,
+        title="Top 10 Customers by Revenue"
     )
 
     st.plotly_chart(
@@ -199,7 +203,7 @@ if uploaded_file:
     st.divider()
 
     # --------------------------------------------------
-    # Product Category Analysis
+    # PRODUCT CATEGORY ANALYSIS
     # --------------------------------------------------
 
     st.subheader("📦 Revenue by Product Category")
@@ -214,7 +218,7 @@ if uploaded_file:
         category_sales,
         names="Product_Category",
         values="Revenue",
-        title="Revenue Contribution by Category"
+        title="Revenue Contribution by Product Category"
     )
 
     st.plotly_chart(
@@ -225,7 +229,94 @@ if uploaded_file:
     st.divider()
 
     # --------------------------------------------------
-    # Data Preview
+    # AI BUSINESS ANALYST
+    # --------------------------------------------------
+
+    st.subheader("🤖 AI Business Analyst")
+
+    question = st.text_input(
+        "Ask a business question"
+    )
+
+    if question:
+
+        question = question.lower()
+
+        customer_sales = (
+            df.groupby("Customer_Name")["Revenue"]
+            .sum()
+            .reset_index()
+        )
+
+        if "underperforming" in question or "region" in question:
+
+            worst_region = (
+                region_sales
+                .sort_values("Revenue")
+                .iloc[0]
+            )
+
+            st.success(
+                f"""
+Underperforming Region: {worst_region['Region']}
+
+Revenue: ₹{worst_region['Revenue']:,.0f}
+"""
+            )
+
+        elif "top customer" in question:
+
+            best_customer = (
+                customer_sales
+                .sort_values(
+                    by="Revenue",
+                    ascending=False
+                )
+                .iloc[0]
+            )
+
+            st.success(
+                f"""
+Top Customer: {best_customer['Customer_Name']}
+
+Revenue: ₹{best_customer['Revenue']:,.0f}
+"""
+            )
+
+        elif "summary" in question or "summarize" in question:
+
+            st.success(
+                f"""
+Revenue: ₹{total_revenue:,.0f}
+
+Profit: ₹{total_profit:,.0f}
+
+Orders: {total_orders:,}
+
+Customers: {total_customers:,}
+
+Profit Margin: {profit_margin:.2f}%
+"""
+            )
+
+        else:
+
+            st.warning(
+                """
+Try asking:
+
+• Which region is underperforming?
+
+• Show top customer
+
+• Summarize business
+"""
+            )
+
+    st.divider()
+
+    # --------------------------------------------------
+    # DATA PREVIEW
     # --------------------------------------------------
 
     st.subheader("📄 Data Preview")
@@ -235,7 +326,12 @@ if uploaded_file:
         use_container_width=True
     )
 
-    st.write(f"Total Records: {len(df):,}")
+    st.write(
+        f"Total Records: {len(df):,}"
+    )
 
 else:
-    st.info("👆 Upload the AI Business Analyst Excel file to begin analysis.")
+
+    st.info(
+        "👆 Upload the AI Business Analyst dataset to begin."
+    )
