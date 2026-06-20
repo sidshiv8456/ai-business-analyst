@@ -30,24 +30,101 @@ uploaded_file = st.file_uploader(
 if uploaded_file:
 
     # Load Data
-    df = pd.read_excel(
+    filtered_df = pd.read_excel(
         uploaded_file,
         sheet_name="Sales_Data"
     )
 
-    df["Date"] = pd.to_datetime(df["Date"])
+    filtered_df["Date"] = pd.to_datetime(filtered_df["Date"])
+    # --------------------------------------------------
+    # SIDEBAR FILTERS
+    # --------------------------------------------------
 
+    st.sidebar.header("🔍 Filters")
+
+    regions = sorted(filtered_df["Region"].unique())
+
+    selected_regions = st.sidebar.multiselect(
+        "Select Region",
+        options=regions,
+        default=regions
+    )
+
+
+    categories = sorted(
+    filtered_df["Product_Category"].unique()
+    )
+
+    selected_categories = st.sidebar.multiselect(
+        "Select Product Category",
+        options=categories,
+        default=categories
+    )
+
+
+    min_date = filtered_df["Date"].min()
+    max_date = filtered_df["Date"].max()
+
+    date_range = st.sidebar.date_input(
+        "Select Date Range",
+        value=(min_date, max_date)
+    )
+
+
+    filtered_filtered_df = filtered_df.copy()
+
+    filtered_filtered_df = filtered_filtered_df[
+    filtered_filtered_df["Region"].isin(
+        selected_regions
+    )
+    ]
+
+    filtered_filtered_df = filtered_filtered_df[
+    filtered_filtered_df["Product_Category"].isin(
+        selected_categories
+    )
+    ]
+
+    if len(date_range) == 2:
+
+         start_date, end_date = date_range
+
+    filtered_filtered_df = filtered_filtered_df[
+        (
+            filtered_filtered_df["Date"]
+            >= pd.to_datetime(start_date)
+        )
+        &
+        (
+            filtered_filtered_df["Date"]
+            <= pd.to_datetime(end_date)
+        )
+    ]
+
+    st.info(
+    f"Showing {len(filtered_filtered_df):,} records "
+    f"out of {len(filtered_df):,}"
+    )
+
+
+    if filtered_df.empty:
+
+     st.warning(
+        "No data available for selected filters."
+    )
+
+    st.stop()
     # --------------------------------------------------
     # KPI CALCULATIONS
     # --------------------------------------------------
 
-    total_revenue = df["Revenue"].sum()
+    total_revenue = filtered_filtered_df["Revenue"].sum()
 
-    total_profit = df["Profit"].sum()
+    total_profit = filtered_df["Profit"].sum()
 
-    total_orders = df["Order_ID"].nunique()
+    total_orders = filtered_filtered_df["Order_ID"].nunique()
 
-    total_customers = df["Customer_ID"].nunique()
+    total_customers = filtered_filtered_df["Customer_ID"].nunique()
 
     average_order_value = total_revenue / total_orders
 
@@ -112,8 +189,8 @@ if uploaded_file:
     st.subheader("📈 Monthly Revenue Trend")
 
     monthly_revenue = (
-        df.groupby(
-            df["Date"].dt.to_period("M")
+        filtered_filtered_df.groupby(
+            filtered_filtered_df["Date"].dt.to_period("M")
         )["Revenue"]
         .sum()
         .reset_index()
@@ -146,7 +223,7 @@ if uploaded_file:
     st.subheader("🌍 Region Performance")
 
     region_sales = (
-        df.groupby("Region")["Revenue"]
+        filtered_df.groupby("Region")["Revenue"]
         .sum()
         .reset_index()
         .sort_values(
@@ -177,7 +254,7 @@ if uploaded_file:
     st.subheader("🏆 Top 10 Customers")
 
     top_customers = (
-        df.groupby("Customer_Name")["Revenue"]
+        filtered_df.groupby("Customer_Name")["Revenue"]
         .sum()
         .reset_index()
         .sort_values(
@@ -209,7 +286,7 @@ if uploaded_file:
     st.subheader("📦 Revenue by Product Category")
 
     category_sales = (
-        df.groupby("Product_Category")["Revenue"]
+        filtered_df.groupby("Product_Category")["Revenue"]
         .sum()
         .reset_index()
     )
@@ -243,7 +320,7 @@ if uploaded_file:
         question = question.lower()
 
         customer_sales = (
-            df.groupby("Customer_Name")["Revenue"]
+            filtered_df.groupby("Customer_Name")["Revenue"]
             .sum()
             .reset_index()
         )
@@ -322,12 +399,12 @@ Try asking:
     st.subheader("📄 Data Preview")
 
     st.dataframe(
-        df,
+        filtered_df,
         use_container_width=True
     )
 
     st.write(
-        f"Total Records: {len(df):,}"
+        f"Total Records: {len(filtered_df):,}"
     )
 
 else:
