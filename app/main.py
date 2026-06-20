@@ -13,6 +13,13 @@ from components.charts import (
     show_category_analysis
 )
 
+from components.insights import show_insights
+
+from components.ai_chat import show_ai_chat
+
+from components.target_analysis import (
+    show_target_analysis
+)
 
 st.set_page_config(
     page_title="AI Business Analyst",
@@ -49,6 +56,12 @@ if uploaded_file:
 
     st.divider()
 
+    show_insights(filtered_df)
+
+    st.divider()
+
+    st.divider()
+
     show_revenue_trend(filtered_df)
 
     st.divider()
@@ -62,6 +75,17 @@ if uploaded_file:
     st.divider()
 
     show_category_analysis(filtered_df)
+
+    st.divider()
+
+    show_ai_chat(filtered_df)
+
+    st.divider()
+
+    show_target_analysis(
+    filtered_df,
+    uploaded_file
+)
 
 else:
 
